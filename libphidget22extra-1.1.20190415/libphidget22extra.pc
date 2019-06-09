@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libphidget22extra
+Description: Phidget22 extra library
+Version: 1.1
+Libs: -L${libdir} -lphidget22extra -lphidget22
+Cflags: -I${includedir}

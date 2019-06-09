@@ -1,0 +1,18 @@
+                        Phidget22 Admin Tool
+                      Version 1.1, April 3 2019
+
+Installation
+============
+
+	./configure; make; make install
+	
+Requirements
+============
+
+	libphidget22
+	libphidget22extra
+
+Usage
+=====
+
+   'phidget22admin -h' to see options.
