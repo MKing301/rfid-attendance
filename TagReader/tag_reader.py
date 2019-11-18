@@ -1,10 +1,13 @@
 import sys
+# import webbrowser
 import time
 import datetime
 import psycopg2
+import psycopg2.extras
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
+from selenium import webdriver
 from functools import wraps
 from Phidget22.Devices.RFID import *
 from Phidget22.PhidgetException import *
@@ -57,10 +60,10 @@ def ErrorEvent(self, eCode, description):
     print("Error %i : %s" % (eCode, description))
 
 def TagHandler(self, tag, protocol):
-    print("Tag: %s"  % tag)
-    print("Protocol: %s" % RFIDProtocol.getName(protocol))
-    #print("Timestamp: " + str(datetime.datetime.now().strftime("%B %d, %Y")))
-    print("Timestamp: " + str(datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")))
+    # print("Tag: %s"  % tag)
+    # print("Protocol: %s" % RFIDProtocol.getName(protocol))
+    # print("Timestamp: " + str(datetime.datetime.now().strftime("%B %d, %Y")))
+    # print("Timestamp: " + str(datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")))
 
 
     # Get a connection
@@ -76,9 +79,57 @@ def TagHandler(self, tag, protocol):
     #commit record(s)
     conn.commit()
 
-    # Close the communication with the PostgreSQL database
+    # Close the current cursor
     cur.close()
+
+    # dict cursor which allows access to the retrieved
+    # records using an interface similar to the Python dictionaries to perform
+    # queries
+    dict_cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    dict_cur.execute("SELECT * FROM users WHERE userid = %s", [tag])
+    # retrieve one record from the database
+    data = dict_cur.fetchone()
+
+    # close dictionary cursor
+    dict_cur.close()
+
+    # Close the communication with the PostgreSQL database
     conn.close()
+    
+    try:
+        person = open('/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/TagReader/templates/welcome.html', 'w')
+
+        fname = data['first_name']
+        lname = data['last_name']
+        pic = f"/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/TagReader/static/profile_pics/{data['profile_pic']}"
+
+        message = f"""
+        <html>
+            <head>
+                <title>Person</title>
+            </head>
+            <body>
+                <img src="{pic}" alt="image" height="400" width="400">
+                <p style="font-size:60px;">{fname} {lname}</p>
+            </body>
+        </html>
+        """
+        person.write(message)
+        person.close()
+
+        # Python webbrowser
+        # chrome_path = '/usr/bin/firefox %s'
+        # webbrowser.get(chrome_path).open('/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/TagReader/templates/welcome.html')
+
+        # Selenium
+        browser = webdriver.Firefox(executable_path='/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/TagReader/geckodriver')
+        browser.get('file:////home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/TagReader/templates/welcome.html')
+        time.sleep(3)
+        browser.close()
+        browser.quit()
+
+    except Exception as e:
+        print(f'Exception: {e}')
 
 
 @app.route('/')
