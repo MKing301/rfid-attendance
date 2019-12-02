@@ -91,11 +91,11 @@ def TagHandler(self, tag, protocol):
     conn.close()
     
     try:
-        person = open('/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/TagReader/templates/welcome.html', 'w')
+        person = open('/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/templates/welcome.html', 'w')
 
         fname = data['first_name']
         lname = data['last_name']
-        pic = f"/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/TagReader/static/images/{data['profile_pic']}"
+        pic = f"/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/static/images/{data['profile_pic']}"
 
         message = f"""
         <html>
@@ -112,19 +112,14 @@ def TagHandler(self, tag, protocol):
         person.close()
 
         # Selenium
-        browser = webdriver.Firefox(executable_path='/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/TagReader/geckodriver')
-        browser.get('file:////home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/TagReader/templates/welcome.html')
+        browser = webdriver.Firefox(executable_path='/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/geckodriver')
+        browser.get('file:////home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/templates/welcome.html')
         time.sleep(3)
         browser.close()
         browser.quit()
 
     except Exception as e:
         print(f'Exception: {e}')
-
-
-@app.route('/')
-def index():
-    return render_template('home.html')
 
 try:
     ch.setOnAttachHandler(RFIDAttached)
