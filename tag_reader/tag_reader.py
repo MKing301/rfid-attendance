@@ -3,17 +3,12 @@ import time
 import datetime
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
-from wtforms import Form, StringField, TextAreaField, PasswordField, validators
-from passlib.hash import sha256_crypt
 from selenium import webdriver
-from functools import wraps
 from Phidget22.Devices.RFID import *
 from Phidget22.PhidgetException import *
 from Phidget22.Phidget import *
 from Phidget22.Net import *
 
-app = Flask(__name__)
 
 try:
     ch = RFID()
