@@ -21,7 +21,9 @@ def create_app(config_class=Config):
 
     from tag_reader.main.views import main
     from tag_reader.users.views import users
+    from tag_reader.errors.handlers import errors
     app.register_blueprint(main)
     app.register_blueprint(users)
+    app.register_blueprint(errors)
 
     return app
