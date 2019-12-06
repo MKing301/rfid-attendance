@@ -1,14 +1,69 @@
+import os
 import sys
 import time
 import datetime
-import psycopg2
-import psycopg2.extras
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String,  DateTime, ForeignKey
+from sqlalchemy import create_engine
+from sqlalchemy import create_engine, asc
+from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import relationship
 from selenium import webdriver
 from Phidget22.Devices.RFID import *
 from Phidget22.PhidgetException import *
 from Phidget22.Phidget import *
 from Phidget22.Net import *
 
+
+Base = declarative_base()
+
+
+class Users(Base):
+    '''A user in the RFID app program. Users will have
+       the following attributes:
+       Attibute(s):
+       id - unique id number for each user
+       first_name = user's first name
+       last_name = user's last name
+       email - user's email address
+       password - user's password
+       userid - rfid tag associated with user
+       profile_pic - user's profile picture
+       created_date - date user inserted into table
+    '''
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    first_name = Column(String(250), nullable=False)
+    last_name = Column(String(250), nullable=False)
+    email = Column(String(250), nullable=False)
+    password = Column(String(250), nullable=False)
+    userid = Column(String(250), nullable=False)
+    profile_pic = Column(String(250))
+    create_date =  Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class Log(Base):
+    '''A log of scanned rfid tags with timestamp(utc):
+       Attibute(s):
+       id - unique id number
+       rfidtag - rfid tag assigned to user
+       inserted_date - timestamp of log entry in uct
+    '''
+    __tablename__ = 'log'
+
+    id = Column(Integer, primary_key=True)
+    rfidtag = Column(String, ForeignKey('users.userid'))
+    date_time =  Column(DateTime, default=datetime.datetime.utcnow)
+    users = relationship(Users)    
+
+
+engine = create_engine(os.environ.get('RFID_URI'))
+Base.metadata.bind = engine
+DBSession = sessionmaker(bind=engine)
+session = scoped_session(DBSession)
 
 try:
     ch = RFID()
@@ -55,42 +110,31 @@ def ErrorEvent(self, eCode, description):
 
 def TagHandler(self, tag, protocol):
 
-    # Get a connection
 
-    conn = psycopg2.connect(database='attendance', user='postgres', password='postgres', host='localhost')
+    # Create record for scanned tag to insert into log table
+    log = Log(rfidtag=tag)
 
-    # conn.cursor will return a cursor object, you can use this cursor to perform queries
-    cur = conn.cursor()
+    # Stage record to insert into table
+    session.add(log)
 
-    # execute query
-    cur.execute('INSERT INTO log (rfidtag) VALUES (%s)', [tag])
+    # Commit record
+    session.commit()
 
-    #commit record(s)
-    conn.commit()
 
-    # Close the current cursor
-    cur.close()
+    # Query database to obtain name associated with scanned tag
+    data = session.query(Users).filter_by(userid=tag).first()
 
-    # dict cursor which allows access to the retrieved
-    # records using an interface similar to the Python dictionaries to perform
-    # queries
-    dict_cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    dict_cur.execute("SELECT * FROM users WHERE userid = %s", [tag])
-    # retrieve one record from the database
-    data = dict_cur.fetchone()
 
-    # close dictionary cursor
-    dict_cur.close()
-
-    # Close the communication with the PostgreSQL database
-    conn.close()
+    # Close session
+    session.close()
     
+    # Open welcome template and insert user's profile picture and first & last name into the body
     try:
         person = open('/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/templates/welcome.html', 'w')
 
-        fname = data['first_name']
-        lname = data['last_name']
-        pic = f"/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/static/images/{data['profile_pic']}"
+        fname = data.first_name
+        lname = data.last_name
+        pic = f"/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/static/images/{data.profile_pic}"
 
         message = f"""
         <html>
@@ -106,7 +150,7 @@ def TagHandler(self, tag, protocol):
         person.write(message)
         person.close()
 
-        # Selenium
+        # Use Selenium to open browser, display user's profile image and first & last name for 3 seconds using welcome template
         browser = webdriver.Firefox(executable_path='/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/geckodriver')
         browser.get('file:////home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/templates/welcome.html')
         time.sleep(3)
