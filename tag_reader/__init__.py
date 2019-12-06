@@ -1,11 +1,15 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from tag_reader.config import Config
 
 
 # Create db
 db = SQLAlchemy()
+
+# Set up encrpytion
+bcrypt = Bcrypt()
 
 # Create instance of login manager
 login_manager = LoginManager()
@@ -17,6 +21,7 @@ def create_app(config_class=Config):
     app.config.from_object(Config)
 
     db.init_app(app)
+    bcrypt.init_app(app)
     login_manager.init_app(app)
 
     from tag_reader.main.views import main
