@@ -20,7 +20,7 @@ from Phidget22.Net import *
 Base = declarative_base()
 
 
-class Users(Base):
+class People(Base):
     '''A user in the RFID app program. Users will have
        the following attributes:
        Attibute(s):
@@ -33,7 +33,7 @@ class Users(Base):
        profile_pic - user's profile picture
        created_date - date user inserted into table
     '''
-    __tablename__ = 'users'
+    __tablename__ = 'people'
 
     id = Column(Integer, primary_key=True)
     first_name = Column(String(250), nullable=False)
@@ -41,23 +41,22 @@ class Users(Base):
     email = Column(String(250), nullable=False)
     password = Column(String(250), nullable=False)
     userid = Column(String(250), nullable=False)
-    profile_pic = Column(String(250))
-    create_date =  Column(DateTime, default=datetime.datetime.utcnow)
+    profile_pic = Column(String(250), nullable=False, default='default.png')
+    created_date =  Column(DateTime, default=datetime.datetime.utcnow)
 
 
-class Log(Base):
+class Logs(Base):
     '''A log of scanned rfid tags with timestamp(utc):
        Attibute(s):
        id - unique id number
        rfidtag - rfid tag assigned to user
        inserted_date - timestamp of log entry in uct
     '''
-    __tablename__ = 'log'
+    __tablename__ = 'logs'
 
     id = Column(Integer, primary_key=True)
-    rfidtag = Column(String, ForeignKey('users.userid'))
-    date_time =  Column(DateTime, default=datetime.datetime.utcnow)
-    users = relationship(Users)    
+    rfidtag = Column(String, ForeignKey('people.userid'))
+    inserted_date =  Column(DateTime, default=datetime.datetime.utcnow)  
 
 
 engine = create_engine(os.environ.get('RFID_URI'))
@@ -112,7 +111,7 @@ def TagHandler(self, tag, protocol):
 
 
     # Create record for scanned tag to insert into log table
-    log = Log(rfidtag=tag)
+    log = Logs(rfidtag=tag)
 
     # Stage record to insert into table
     session.add(log)
@@ -122,7 +121,7 @@ def TagHandler(self, tag, protocol):
 
 
     # Query database to obtain name associated with scanned tag
-    data = session.query(Users).filter_by(userid=tag).first()
+    data = session.query(People).filter_by(userid=tag).first()
 
 
     # Close session
