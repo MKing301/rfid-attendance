@@ -2,6 +2,7 @@ __pycache__
 __init__.pyc
 
 geckodriver.log
+welcome.html
 
 # Environments
 .env
