@@ -1,3 +1,4 @@
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from sqlalchemy import Column, ForeignKey, Integer, String,  DateTime
 from flask import current_app
 from tag_reader import db, login_manager
@@ -18,6 +19,25 @@ class People(db.Model, UserMixin):
     userid = db.Column(db.String(50), unique=True, nullable=False)
     profile_pic = db.Column(db.String(255), nullable=False, default='default.jpg')
     created_date =  db.Column(DateTime, default=datetime.datetime.utcnow)
+
+
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
+        return s.dumps({'user_id':self.id}).decode('utf-8')
+
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return People.query.get(user_id)
+
+
+    def __repr__(self):
+        return f"People('{self.fist_name}, {self.last_name}, {self.email}')"
 
 
 class Logs(db.Model):
