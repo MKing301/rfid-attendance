@@ -133,7 +133,7 @@ def TagHandler(self, tag, protocol):
 
         fname = data.first_name
         lname = data.last_name
-        pic = f"/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/static/images/{data.profile_pic}"
+        pic = f"/home/mfsd1809/Dev/FullStackWebDeveloper/GitRepos/rfid-attendance/tag_reader/static/profile_pics/{data.profile_pic}"
 
         message = f"""
         <html>
