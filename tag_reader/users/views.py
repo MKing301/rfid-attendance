@@ -2,8 +2,9 @@ from flask import render_template, url_for, flash, redirect, request, Blueprint
 from flask_login import login_user, current_user, logout_user, login_required
 from tag_reader import db, bcrypt
 from tag_reader.models import People
-from tag_reader.users.forms import RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm
-from tag_reader.users.utils import send_reset_email
+from tag_reader.users.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
+                                    RequestResetForm, ResetPasswordForm)
+from tag_reader.users.utils import send_reset_email, save_picture
 
 
 users = Blueprint('users', __name__)
@@ -19,7 +20,8 @@ def register():
         user = People(first_name=form.first_name.data,
                      last_name=form.last_name.data,
                      email=form.email.data,
-                     password=hashed_password
+                     password=hashed_password,
+                     profile_pic='default.png'
                      )
         db.session.add(user)
         db.session.commit()
@@ -44,17 +46,35 @@ def login():
     return render_template('login.html', title='Login', form=form)
 
 
-@users.route("/dashboard", methods=['GET', 'POST'])
-@login_required
-def dashboard():
-    return render_template('dashboard.html', title='Dashboard')
-
-
 @users.route("/logout")
 def logout():
     logout_user()
     flash('Signed out!', 'success')
     return redirect(url_for('main.home'))
+
+
+@users.route("/dashboard", methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    form = UpdateAccountForm()
+    if form.validate_on_submit():
+        if form.profile_pic.data:
+            picture_file = save_picture(form.profile_pic.data)
+            current_user.profile_pic = picture_file
+        current_user.email = form.email.data
+        db.session.commit()
+        flash('Your account has been updated!', 'success')
+        return redirect(url_for('users.dashboard'))
+    elif request.method == 'GET':
+        form.first_name.data = current_user.first_name
+        form.last_name.data = current_user.last_name
+        form.email.data = current_user.email
+        form.userid.data = current_user.userid
+    profile_pic = url_for('static', filename='profile_pics/' + current_user.profile_pic)
+    return render_template('dashboard.html',
+                           title='Account',
+                           profile_pic=profile_pic,
+                           form=form)
 
 
 @users.route("/reset_password", methods=['GET', 'POST'])
