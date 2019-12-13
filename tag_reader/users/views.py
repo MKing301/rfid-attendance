@@ -1,7 +1,8 @@
 from flask import render_template, url_for, flash, redirect, request, Blueprint
 from flask_login import login_user, current_user, logout_user, login_required
 from tag_reader import db, bcrypt
-from tag_reader.models import People
+from sqlalchemy import desc
+from tag_reader.models import People, Logs
 from tag_reader.users.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
                                     RequestResetForm, ResetPasswordForm)
 from tag_reader.users.utils import send_reset_email, save_picture
@@ -75,6 +76,18 @@ def dashboard():
                            title='Account',
                            profile_pic=profile_pic,
                            form=form)
+
+
+
+# Show full attendance log
+@users.route('/attendees')
+@login_required
+def attendees():
+    ''' Function returns a list of all the scanned RFID tags by timestamp in
+        descending order.
+    '''
+    attendees = People.query.join(Logs, People.userid==Logs.rfidtag).add_columns(People.first_name, People.last_name, Logs.inserted_date).order_by(desc(Logs.inserted_date))
+    return render_template('attendance.html', attendees=attendees)
 
 
 @users.route("/reset_password", methods=['GET', 'POST'])
