@@ -13,6 +13,7 @@ users = Blueprint('users', __name__)
 
 @users.route("/register", methods=['GET', 'POST'])
 def register():
+    """ Allow user the ability to register to use the application. """
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
     form = RegistrationForm()
@@ -33,6 +34,7 @@ def register():
 
 @users.route("/login", methods=['GET', 'POST'])
 def login():
+    """ Log user into application. """
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
     form = LoginForm()
@@ -49,6 +51,7 @@ def login():
 
 @users.route("/logout")
 def logout():
+    """ Log current user out of the application. """
     logout_user()
     flash('Signed out!', 'success')
     return redirect(url_for('main.home'))
@@ -57,6 +60,9 @@ def logout():
 @users.route("/dashboard", methods=['GET', 'POST'])
 @login_required
 def dashboard():
+    """ Allow registered users the abilit to update their email and/or
+        profile picture.
+    """
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.profile_pic.data:
@@ -83,15 +89,18 @@ def dashboard():
 @users.route('/attendees')
 @login_required
 def attendees():
-    ''' Function returns a list of all the scanned RFID tags by timestamp in
-        descending order.
-    '''
+    """ Provides a list of all the people that had their RFID tag scanned.
+        The list is sorted by timestamp in descending order.
+    """
     attendees = People.query.join(Logs, People.userid==Logs.rfidtag).add_columns(People.first_name, People.last_name, Logs.inserted_date).order_by(desc(Logs.inserted_date))
     return render_template('attendance.html', attendees=attendees)
 
 
 @users.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
+    """ Provides registered users a form to submit their email address
+        to receive instructions to reset their password.
+    """
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
     form = RequestResetForm()
@@ -105,6 +114,8 @@ def reset_request():
 
 @users.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
+    """ Provide registered user a form to change their password.
+    """
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
     user = People.verify_reset_token(token)

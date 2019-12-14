@@ -16,13 +16,14 @@ from Phidget22.PhidgetException import *
 from Phidget22.Phidget import *
 from Phidget22.Net import *
 
-
+# Returns a new base class from which all mapped classes should inherit
 Base = declarative_base()
 
 
 class People(Base):
     '''A user in the RFID app program. Users will have
        the following attributes:
+
        Attibute(s):
        id - unique id number for each user
        first_name = user's first name
@@ -47,6 +48,7 @@ class People(Base):
 
 class Logs(Base):
     '''A log of scanned rfid tags with timestamp(utc):
+    
        Attibute(s):
        id - unique id number
        rfidtag - rfid tag assigned to user

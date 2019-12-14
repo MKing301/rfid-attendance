@@ -7,6 +7,9 @@ from tag_reader import mail
 
 
 def send_reset_email(user):
+    """ Send an email to provided address with instructions on how
+        to reset the password for the user associated with the email.'
+    """
     token = user.get_reset_token()
     msg = Message('Password Reset Request', 
                    sender=os.environ.get('MAIL_USERNAME'),
@@ -20,6 +23,7 @@ If you did not make this request, simply ignore this email and no change will be
 
 
 def save_picture(form_picture):
+    """ Allow current user to upload a profile picture."""
     random_hex = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + f_ext

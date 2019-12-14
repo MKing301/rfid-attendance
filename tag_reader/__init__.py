@@ -9,7 +9,7 @@ from tag_reader.config import Config
 # Create db
 db = SQLAlchemy()
 
-# Set up encrpytion
+# Set up encrpytion instance
 bcrypt = Bcrypt()
 
 # Create instance of login manager
@@ -17,6 +17,7 @@ login_manager = LoginManager()
 login_manager.login_view = 'users.login'
 login_manager.login_message_category = 'info'
 
+# Set up mail instance
 mail = Mail()
 
 def create_app(config_class=Config):
